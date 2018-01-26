@@ -1,12 +1,16 @@
 // Calculates a single neural network layer with x square activation function.
 // Sparsity inducing and no problem with evolution based training.
+// High density version for where density is greater than the number of 
+// dimensions (computeSize.)
 package data.reservoir.compute.ai;
 
-public final class ComputeLayerSq extends Compute {
+import java.util.Arrays;
+
+public final class ComputeLayerSqHD extends Compute {
 
     private final int density;
 
-    ComputeLayerSq(Reservoir r, int density) {
+    ComputeLayerSqHD(Reservoir r, int density) {
         super(r);
         this.density = density;
     }
@@ -15,21 +19,22 @@ public final class ComputeLayerSq extends Compute {
     public void compute() {
         float[] workA = reservoir.getComputeBuffer(0);
         float[] workB = reservoir.getComputeBuffer(1);
+        float[] workC = reservoir.getComputeBuffer(2);
         reservoir.gather(workA);
         VecOps.adjust(workA, workA);
-        reservoir.multiplyWithWeights(workB, workA);
-        for (int i = 1; i < density; i++) {
+        Arrays.fill(workC, 0f);
+        for (int i = 0; i < density; i++) {
             reservoir.randomProjection(workA);
-            reservoir.multiplyWithWeightsAddTo(workB, workA);
+            VecOps.multiply(workB, workA, workA);  // square
+            reservoir.multiplyWithWeightsAddTo(workC, workB);
         }
-        VecOps.multiply(workB, workB, workB);
-        VecOps.scale(workB, workB, 1f/density);
-        reservoir.scatterGeneral(workB);
+        VecOps.scale(workC, workC, 1f / density);
+        reservoir.scatterGeneral(workC);
     }
 
     @Override
     public int buffersRequired() {
-        return 2;
+        return 3;
     }
 
     @Override

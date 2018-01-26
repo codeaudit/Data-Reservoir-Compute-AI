@@ -1,4 +1,4 @@
-// Rescale the input section of the reservoir to a standard vector length
+// Put potential bias values into the write section of the reservoir 
 package data.reservoir.compute.ai;
 
 public final class ComputeBiasWrite extends Compute {

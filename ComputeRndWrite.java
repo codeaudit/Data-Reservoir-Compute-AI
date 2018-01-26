@@ -1,3 +1,6 @@
+// Put some random numbers into the write section of the data reservoir.
+// It can make evolution problematic but can also allow the network to
+// discover randomized algorithms.  Or that is the idea anyway.
 package data.reservoir.compute.ai;
 
 public final class ComputeRndWrite extends Compute {

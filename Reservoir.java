@@ -110,6 +110,11 @@ public class Reservoir implements Serializable {
     public void setWeights(float[] vec) {
         System.arraycopy(vec, 0, weights, 0, weightSize);
     }
+    
+//  all processing is done on blocks of computeSize.
+    public int getComputeSize(){
+        return computeSize;
+    }
 
     void multiplyWithWeights(float[] resultVec, float[] x) {
         for (int i = 0; i < computeSize; i++) {
