@@ -12,17 +12,31 @@ public class Main extends Application {
     static float[] output = new float[3];
 
     public static void main(String[] args) {
+      
         Reservoir r = new Reservoir(16, 1, 2, 2, 3);
-        r.addComputeUnit(new ComputeNormalizeInput(r));
-        r.addComputeUnit(new ComputeBiasWrite(r, 0));
-        r.addComputeUnit(new ComputeRndWrite(r, 1e-4f, 1));
-      //  r.addComputeUnit(new ComputeAM(r, 10));// throw in to test 
-        r.addComputeUnit(new ComputeLayerSqHD(r, 3));
-        r.addComputeUnit(new ComputeLayerSqHD(r, 3));
-        r.addComputeUnit(new ComputeLayerSqHD(r, 3));
+
+        r.addComputeUnit(
+                new ComputeNormalizeInput(r));
+        r.addComputeUnit(
+                new ComputeBiasWrite(r, 0));
+        r.addComputeUnit(
+                new ComputeRndWrite(r, 1e-4f, 1));
+        //  r.addComputeUnit(new ComputeAM(r, 10));// throw in to test 
+    //    r.addComputeUnit(
+    //            new ComputeLayerSqHD(r, 3));
+    //    r.addComputeUnit(
+    //            new ComputeLayerSqHD(r, 3));
+        r.addComputeUnit(
+                new ComputeLayerSqRtHD(r, 30));
         r.prepareForUse();
+
+              input[0]=1f;
+              input[15]=1f;
+             r.setInput(input);
+            r.computeAll();
         float[] parent = new float[r.getWeightSize()];
-        for (int i = 0; i < 10000; i++) {
+        for (int i = 0;
+                i < 10000; i++) {
             float pCost = getCost(r);
             r.getWeights(parent);
             r.mutate(1000);
@@ -34,26 +48,40 @@ public class Main extends Application {
             }
 
         }
-        Arrays.fill(input, 0f);
+
+        Arrays.fill(input,
+                0f);
         input[0] = 1f;
         r.clearReservoir();
+
         r.setInput(input);
+
         r.computeAll();
+
         r.getOutput(output);
+
         System.out.println(Arrays.toString(output));
 
         input[1] = 1f;
         r.clearReservoir();
+
         r.setInput(input);
+
         r.computeAll();
+
         r.getOutput(output);
+
         System.out.println(Arrays.toString(output));
 
         input[2] = 1f;
         r.clearReservoir();
+
         r.setInput(input);
+
         r.computeAll();
+
         r.getOutput(output);
+
         System.out.println(Arrays.toString(output));
 
         launch(args);

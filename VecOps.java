@@ -63,4 +63,15 @@ public class VecOps {
         float adj = 1f / (float) Math.sqrt((sumSq(x) / x.length) + MIN_SQ);
         scale(rVec, x, adj);
     }
+    
+    // Approximate square root retaining sign.  Squashing function for neural networks.
+    // x>=0 fn=sqrt(x);  x<0 -sqrt(-x)
+    public static void signedSqRt(float[] rVec,float[] x){
+        for(int i=0;i<x.length;i++){
+            int f=Float.floatToRawIntBits(x[i]);
+            int sri=(((f&0x7fffffff)+(127<<23))>>>1)|(f&0x80000000);
+            rVec[i]=Float.intBitsToFloat(sri);
+        }
+    }
+    
 }

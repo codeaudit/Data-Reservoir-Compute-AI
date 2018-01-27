@@ -1,16 +1,15 @@
-// Calculates a single neural network layer with x square activation function.
-// Sparsity inducing and no problem with evolution based training.
+// Calculates a single neural network layer with square root activation function.
 // High density version for where density is greater than the number of 
 // dimensions (computeSize.)
 package data.reservoir.compute.ai;
 
 import java.util.Arrays;
 
-public final class ComputeLayerSqHD extends Compute {
+public final class ComputeLayerSqRtHD extends Compute {
 
     private final int density;
 
-    ComputeLayerSqHD(Reservoir r, int density) {
+    ComputeLayerSqRtHD(Reservoir r, int density) {
         super(r);
         this.density = density;
     }
@@ -25,7 +24,7 @@ public final class ComputeLayerSqHD extends Compute {
         Arrays.fill(workC, 0f);
         for (int i = 0; i < density; i++) {
             reservoir.randomProjection(workA);
-            VecOps.multiply(workB, workA, workA);  // square
+            VecOps.signedSqRt(workB, workA);  // approximate signed square root
             reservoir.multiplyWithWeightsAddTo(workC, workB);
         }
         VecOps.scale(workC, workC, 1f / (float) Math.sqrt(density));
