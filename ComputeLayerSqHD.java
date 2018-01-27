@@ -28,7 +28,7 @@ public final class ComputeLayerSqHD extends Compute {
             VecOps.multiply(workB, workA, workA);  // square
             reservoir.multiplyWithWeightsAddTo(workC, workB);
         }
-        VecOps.scale(workC, workC, 1f / density);
+        VecOps.scale(workC, workC, (float) (1.0 / Math.sqrt(density)));
         reservoir.scatterGeneral(workC);
     }
 
