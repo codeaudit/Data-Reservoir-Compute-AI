@@ -21,19 +21,15 @@ public class Main extends Application {
                 new ComputeBiasWrite(r, 0));
         r.addComputeUnit(
                 new ComputeRndWrite(r, 1e-4f, 1));
-        //  r.addComputeUnit(new ComputeAM(r, 10));// throw in to test 
+    //  r.addComputeUnit(new ComputeAM(r, 10));// throw in to test 
     //    r.addComputeUnit(
     //            new ComputeLayerSqHD(r, 3));
     //    r.addComputeUnit(
     //            new ComputeLayerSqHD(r, 3));
         r.addComputeUnit(
-                new ComputeLayerSqRtHD(r, 30));
+                new ComputeLayerReLUHD(r, 30));
         r.prepareForUse();
 
-              input[0]=1f;
-              input[15]=1f;
-             r.setInput(input);
-            r.computeAll();
         float[] parent = new float[r.getWeightSize()];
         for (int i = 0;
                 i < 10000; i++) {
