@@ -12,22 +12,16 @@ public class Main extends Application {
     static float[] output = new float[3];
 
     public static void main(String[] args) {
-      
+
         Reservoir r = new Reservoir(16, 1, 2, 2, 3);
 
-        r.addComputeUnit(
-                new ComputeNormalizeInput(r));
-        r.addComputeUnit(
-                new ComputeBiasWrite(r, 0));
-        r.addComputeUnit(
-                new ComputeRndWrite(r, 1e-4f, 1));
-    //  r.addComputeUnit(new ComputeAM(r, 10));// throw in to test 
-    //    r.addComputeUnit(
-    //            new ComputeLayerSqHD(r, 3));
-    //    r.addComputeUnit(
-    //            new ComputeLayerSqHD(r, 3));
-        r.addComputeUnit(
-                new ComputeLayerReLUHD(r, 30));
+        r.addComputeUnit(new ComputeNormalizeInput(r));
+        r.addComputeUnit(new ComputeBiasWrite(r, 0));
+        //r.addComputeUnit(new ComputeRndWrite(r, 1e-4f, 1));
+        //r.addComputeUnit(new ComputeAMGT(r, 10,1f));// throw in to test 
+        //r.addComputeUnit(new ComputeLayerSqHD(r, 3));
+        r.addComputeUnit(new ComputeLayerReLU(r, 10));
+        r.addComputeUnit(new ComputeLayerReLU(r, 10));
         r.prepareForUse();
 
         float[] parent = new float[r.getWeightSize()];

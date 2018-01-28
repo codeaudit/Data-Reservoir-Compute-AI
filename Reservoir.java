@@ -24,7 +24,22 @@ public class Reservoir implements Serializable {
     private transient float[][] computeBuffers;
     private transient RNG rng;
     private final ArrayList<Compute> list; // list of all compute units for the AI
-
+    
+//  The data resevoir is in 3 parts [input][write][general]    
+//  All calulations are done on vectors of computeSize (= one block.)
+//  computeSize must be an integer power of 2 >=16 (eg. 16,32,64,128...)    
+//  Subclasses of Compute act on the data reservoir.  Information from all
+//  the data reservoir is selected by weighting and random projection and 
+//  sent to a Compute subclass, the result is generally scattered to the
+//  general part again by random projection and weight based select.
+//  This allows complex interconnection and module behavior to evolve.
+//  Information like bias terms and random numbers go to write section.
+//  The output size can be arbitary.
+//  After adding all the Compute subclasses you want you should call
+//  prepareForUse().  
+//  Generally you should call clearReservoir(), setInput(...), computeAll()
+//  getOutput(...) however depending on the system you are trying to create
+//  you can do other things.    
     public Reservoir(int computeSize, int inputBlocks, int writeBlocks, int generalBlocks, int outputSize) {
         if (computeSize < 16 | (computeSize & computeSize - 1) != 0) {
             throw new IllegalArgumentException("computeSize must be a power of 2 and at least 16");
@@ -37,6 +52,7 @@ public class Reservoir implements Serializable {
         list = new ArrayList<>();
     }
 
+//  Add an object that is a subclass of Compute    
     public void addComputeUnit(Compute c) {
         list.add(c);
     }
@@ -65,6 +81,7 @@ public class Reservoir implements Serializable {
         computeBuffers = new float[nBuffers][computeSize];
     }
 
+// Compute subclass object act on the data reservoir.    
     public void computeAll() {
         hashIndex = 0;
         weightIndex = 0;
@@ -74,25 +91,29 @@ public class Reservoir implements Serializable {
    //     if(weightIndex!=weightSize) System.out.println("Error");
     }
     
-//  reset internal state    
+//  reset internal state of data reservoir.
     public void clearReservoir(){
         Arrays.fill(dataReservoir, 0f);
     }
+    
 // clears all held state such as in associative memory.    
     public void clearHeldStateAll() {
         for (Compute c : list) {
             c.resetHeldState();
         }
     }
-
+//  Sets the input part of the reservoir.  Must be computeSize*inputBlocks length.
     public void setInput(float[] input) {
         System.arraycopy(input, 0, dataReservoir, 0, computeSize * inputBlocks);
     }
 
+//  Gets the outputs from the general part of data reservoir.    
     public void getOutput(float[] output) {
         System.arraycopy(dataReservoir, computeSize * (inputBlocks + writeBlocks), output, 0, outputSize);
     }
 
+//  Turns the Reservoir object into its own descendent for evolution.
+//  You should preserve the prior state by calling getWeigths(...) first.
     public void mutate(long mutatePrecision) {
         for (int i = 0; i < weightSize; i++) {
             weights[i] = rng.mutateXSym(weights[i], mutatePrecision);
@@ -103,10 +124,14 @@ public class Reservoir implements Serializable {
         return weightSize;
     }
 
+//  Gets the current state of the Reservoir object, excluding any state held in 
+//  Compute subclasses such as associative memory. 
     public void getWeights(float[] vec) {
         System.arraycopy(weights, 0, vec, 0, weightSize);
     }
 
+//  Allows you to put back the original state if a evolution step fails to 
+//  improve behavior on a task.    
     public void setWeights(float[] vec) {
         System.arraycopy(vec, 0, weights, 0, weightSize);
     }
@@ -116,22 +141,28 @@ public class Reservoir implements Serializable {
         return computeSize;
     }
 
+//  Allows access to internal weights from Compute subclasses.  
     void multiplyWithWeights(float[] resultVec, float[] x) {
         for (int i = 0; i < computeSize; i++) {
             resultVec[i] = x[i] * weights[weightIndex++];
         }
     }
 
+//  Allows access to internal weights from Compute subclasses. 
     void multiplyWithWeightsAddTo(float[] resultVec, float[] x) {
         for (int i = 0; i < computeSize; i++) {
             resultVec[i] += x[i] * weights[weightIndex++];
         }
     }
 
+//  Fast random projection (random dot product) with the hashing value index
+//  maintained by the Reservoir object.    
     void randomProjection(float[] x) {
         WHT.fastRP(x, hashIndex++);
     }
 
+//  Gathers data from all the data reservoir down to vector of computeSize for
+//  an object of subclass Compute to act on.    
     void gather(float[] g) {
         int totalBlocks = inputBlocks + writeBlocks + generalBlocks;
         int rIndex = 0;
@@ -146,8 +177,10 @@ public class Reservoir implements Serializable {
         }
     }
 
-// s is destroyed by this method, it is assumed the compute unit will not need
-// it again.
+//  Scatter the output of a Compute subclass object to the general part of the
+//  data reservoir via a blending process.    
+//  s is destroyed by this method, it is assumed the compute unit will not need
+//  it again.
     void scatterGeneral(float[] s) {
         int rIndex = computeSize * (inputBlocks + writeBlocks);
         for (int i = 0; i < generalBlocks; i++) {
@@ -161,10 +194,12 @@ public class Reservoir implements Serializable {
         }
     }
 
+//  Put data such as bias terms into the write part of data reservoir.    
     void scatterWrite(float[] s, int writeLocation) {
         System.arraycopy(s, 0, dataReservoir, computeSize * (inputBlocks + writeLocation), computeSize);
     }
 
+//  Give the data in input part of the data reservoir a constant vector length.    
     void normalizeInput() {
         float sumSq = 0f;
         int inputLen = computeSize * inputBlocks;
@@ -177,10 +212,12 @@ public class Reservoir implements Serializable {
         }
     }
 
+//  Buffers of computeSize for Compute subclass objects to use as needed.    
     float[] getComputeBuffer(int index) {
         return computeBuffers[index];
     }
 
+//  Java deserialization    
     private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
         in.defaultReadObject();
         prepareForUse(); //Set up all the buffers and working arrays
